@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<plugin id="Dragooon:WeNotif-Subs">
+  <name>Notifications (Topics)</name>
+  <author email="mail@dragooon.net" url="http://smf-media.com/">Shitiz "Dragooon" Garg</author>
+  <description>Notifications core extension for providing a framework for subscriptions, by default implements for topics and boards</description>
+  <version>1.0</version>
+
+  <hooks>
+    <function point="notification_callback" function="wenotif_subs_callback" filename="$plugindir/plugin" />
+    <function point="display_main" function="wenotif_subs_display_main" filename="$plugindir/plugin" />
+
+    <provides>
+      <!--
+        Provides a hook for verifying a subscription object
+
+        Params:
+          $type - The type of object as fed by the user
+          $id_object - The ID of the object as fed by the user
+
+        Returns :
+          (bool) - If one true is present in the return, it stores the subscription
+      -->
+      <hook type="function">notification_subscription</hook>
+    </provides>
+  </hooks>
+
+  <database>
+    <tables>
+      <table name="{db_prefix}notif_subs" if-exists="update">
+        <columns>
+          <column name="id_member" type="int" default="0" null="no" />
+          <column name="id_object" type="int" default="0" null="no" />
+          <column name="type" type="varchar" size="20" default="" null="no" />
+        </columns>
+        <index type="primary">
+          <field>id_member</field>
+          <field>id_object</field>
+          <field>type</field>
+        </index>
+      </table>
+    </tables>
+  </database>
+</plugin>
