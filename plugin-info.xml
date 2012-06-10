@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <plugin id="Dragooon:WeNotif-Subs">
-  <name>Notifications (Topics)</name>
+  <name>Notifications Core (Subscriptions)</name>
   <author email="mail@dragooon.net" url="http://smf-media.com/">Shitiz "Dragooon" Garg</author>
   <description>Notifications core extension for providing a framework for subscriptions, by default implements for topics and boards</description>
   <version>1.0</version>
