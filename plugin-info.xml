@@ -2,23 +2,22 @@
 <plugin id="Dragooon:WeNotif-Subs">
   <name>Notifications Core (Subscriptions)</name>
   <author email="mail@dragooon.net" url="http://smf-media.com/">Shitiz "Dragooon" Garg</author>
-  <description>Notifications core extension for providing a framework for subscriptions, by default implements for topics and boards</description>
+  <description>Notifications core extension for providing a framework for subscriptions</description>
   <version>1.0</version>
 
+  <actions>
+    <action action="subscribe" function="WeNotif_Subs::action" filename="$plugindir/plugin" />
+  </actions>
+
   <hooks>
-    <function point="notification_callback" function="wenotif_subs_callback" filename="$plugindir/plugin" />
-    <function point="display_main" function="wenotif_subs_display_main" filename="$plugindir/plugin" />
+    <function point="load_theme" function="WeNotif_Subs::hook_load_theme" filename="$plugindir/plugin" />
 
     <provides>
       <!--
-        Provides a hook for verifying a subscription object
-
-        Params:
-          $type - The type of object as fed by the user
-          $id_object - The ID of the object as fed by the user
-
-        Returns :
-          (bool) - If one true is present in the return, it stores the subscription
+        Provides a hook for adding in the subscription's object to the list
+          Params passed :
+            &$subscribers - An array of <subscriber> => <NotifSubscriber object>, extend this if you want to
+                          add a subscription
       -->
       <hook type="function">notification_subscription</hook>
     </provides>
