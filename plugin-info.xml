@@ -30,6 +30,7 @@
           <column name="id_member" type="int" default="0" null="no" />
           <column name="id_object" type="int" default="0" null="no" />
           <column name="type" type="varchar" size="20" default="" null="no" />
+          <column name="starttime" type="int" default="0" null="no" />
         </columns>
         <index type="primary">
           <field>id_member</field>
