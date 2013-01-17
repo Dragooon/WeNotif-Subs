@@ -61,10 +61,85 @@ class WeNotif_Subs
     {
         call_hook('notification_callback', array(&self::$subscriptions));
 
+        loadPluginLanguage('Dragooon:WeNotif-Subs', 'languages/plugin');
+
         foreach (self::$subscriptions as $type => $object)
-            if (!($object instanceof NotifSusbcriber))
+            if (!($object instanceof NotifSusbcriber) || WeNotif::isNotifierDisabled($object->getNotifier()))
                 unset(self::$subscriptions[$type]);
     }
+
+    /**
+     * Hook callback for "profile_areas"
+     *
+     * @static
+     * @access public
+     * @param array &$profile_areas
+     * @return void
+     */
+    public static function hook_profile_areas(&$profile_areas)
+    {
+        global $scripturl, $txt, $context;
+
+        $profile_areas['edit_profile']['areas']['notifsubs'] = array(
+            'label' => $txt['notif_subs'],
+            'enabled' => true,
+            'function' => 'WeNotif_Subs_profile',
+            'permission' => array(
+                'own' => array('profile_extra_own'),
+            ),
+        );
+    }
+
+    /**
+     * Profile area for showing subscriptions
+     *
+     * @static
+     * @access public
+     * @param int $memID
+     * @return void
+     */
+    public static function profile($memID)
+    {
+        global $context, $scripturl, $txt;
+
+        $subscriptions = array();
+
+        foreach (self::$subscriptions as $type => $subscription)
+            $subscription[$type] = array(
+                'type' => $type,
+                'subscriber' => $subscription,
+                'profile' => $subscription->getProfile(),
+                'objects' => array(),
+            );
+
+        $request = wesql::query('
+            SELECT id_object, type
+            FROM {db_prefix}WeNotif_subs
+            WHERE id_member = {int:member}',
+            array(
+                'member' => $memID,
+            )
+        );
+        while ($row = wesql::fetch_assoc($request))
+            if (isset($subscriptions[$row['tyoe']]))
+                $subscriptions[$row['tyoe']]['objects'][] = $row['id_object'];
+        wesql::free_result();
+
+        // Load individual subscription's objects
+        foreach ($subscriptions as &$subscription)
+            if (!empty($subscription['objects']))
+                $subscription['objects'] = $subscription['subsciber']->getObjects($subscription['objects']);
+
+        $context['notif_subscriptions'] = $subscriptions;
+
+        loadPluginTemplate('WeNotif_Subs', 'templates/plugin');
+        wetem::load('notification_subs_profile');
+    }
+}
+
+function WeNotif_Subs_profile()
+{
+    return WeNotif_Subs::profile();
 }
 
 /**
