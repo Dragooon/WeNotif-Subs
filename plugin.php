@@ -96,6 +96,38 @@ interface NotifSusbcriber
      * @return bool
      */
     public function isValidObject($object);
+
+    /**
+     * Returns text for profile areas which will be displayed to the user
+     * Returned array will be formatted like:
+     *
+     * array (
+     *      label => The title of the subscriber
+     *      description => Any additional help text to be displayed for the user
+     * )
+     *
+     * @access public
+     * @return array
+     */
+    public function getProfile();
+
+    /**
+     * Returns the ID, name and an URL for the passed objects for this
+     * subscriber. Returned array will be formatted like:
+     *
+     * array(
+     *      [Object's ID] => array(
+     *          id => Object's ID
+     *          title => Plain text identifying the object (Topic's title, member's name etc)
+     *          href => A fully qualified URL for the object
+     *      )
+     * )
+     *
+     * @access public
+     * @param array $objects IDs of the objects to fetch
+     * @return array
+     */
+    public function getObjects(array $objects);
 }
 
 /**
