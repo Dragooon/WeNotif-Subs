@@ -19,6 +19,19 @@ class WeNotif_Subs
     protected static $subscriptions = array();
 
     /**
+     * Returns the subscribers
+     *
+     * @static
+     * @access public
+     * @param string $subscriber If specified, only returns this subscriber
+     * @return array
+     */
+    public static function getSubscribers($subscriber = null)
+    {
+        return !empty($subscriber) ? self::$subscriptions[$subscriber] : self::$subscriptions;
+    }
+
+    /**
      * Main action for subscribing to a provided subcription
      *
      * @static
@@ -42,7 +55,7 @@ class WeNotif_Subs
         if (!self::$subscriptions[$type]->isValidObject($object))
             fatal_lang_error('wenotif_subs_invalid_object');
 
-        if (NotifSusbcription::get(self::$subscriptions[$type], $object) !== false)
+        if (NotifSubscription::get(self::$subscriptions[$type], $object) !== false)
             fatal_lang_error('wenotif_subs_already_susbcribed');
 
         NotifSubscription::store(self::$subscriptions[$type], $object);
@@ -59,12 +72,12 @@ class WeNotif_Subs
      */
     public static function hook_load_theme()
     {
-        call_hook('notification_callback', array(&self::$subscriptions));
+        call_hook('notification_subscription', array(&self::$subscriptions));
 
         loadPluginLanguage('Dragooon:WeNotif-Subs', 'languages/plugin');
 
         foreach (self::$subscriptions as $type => $object)
-            if (!($object instanceof NotifSusbcriber) || WeNotif::isNotifierDisabled($object->getNotifier()))
+            if (!($object instanceof NotifSubscriber) || WeNotif::isNotifierDisabled($object->getNotifier()))
                 unset(self::$subscriptions[$type]);
     }
 
@@ -103,50 +116,71 @@ class WeNotif_Subs
         global $context, $scripturl, $txt;
 
         $subscriptions = array();
-
+        $starttimes = array();
         foreach (self::$subscriptions as $type => $subscription)
-            $subscription[$type] = array(
+        {
+            $subscriptions[$type] = array(
                 'type' => $type,
                 'subscriber' => $subscription,
                 'profile' => $subscription->getProfile(),
                 'objects' => array(),
             );
+            $starttimes[$type] = array();
+        }
 
         $request = wesql::query('
-            SELECT id_object, type
-            FROM {db_prefix}WeNotif_subs
+            SELECT id_object, type, starttime
+            FROM {db_prefix}notif_subs
             WHERE id_member = {int:member}',
             array(
                 'member' => $memID,
             )
         );
         while ($row = wesql::fetch_assoc($request))
-            if (isset($subscriptions[$row['tyoe']]))
-                $subscriptions[$row['tyoe']]['objects'][] = $row['id_object'];
+        {
+            if (isset($subscriptions[$row['type']]))
+                $subscriptions[$row['type']]['objects'][] = $row['id_object'];
+            $starttimes[$row['type']][$row['id_object']] = timeformat($row['starttime']);
+        }
+
         wesql::free_result();
 
         // Load individual subscription's objects
         foreach ($subscriptions as &$subscription)
             if (!empty($subscription['objects']))
-                $subscription['objects'] = $subscription['subsciber']->getObjects($subscription['objects']);
+            {
+                $subscription['objects'] = $subscription['subscriber']->getObjects($subscription['objects']);
+ 
+                foreach ($subscription['objects'] as $id => &$object)
+                    $object['time'] = $starttimes[$subscription['type']][$id];
+            }
 
         $context['notif_subscriptions'] = $subscriptions;
 
-        loadPluginTemplate('WeNotif_Subs', 'templates/plugin');
+        loadPluginTemplate('Dragooon:WeNotif-Subs', 'templates/plugin');
         wetem::load('notification_subs_profile');
     }
 }
 
-function WeNotif_Subs_profile()
+function WeNotif_Subs_profile($memID)
 {
-    return WeNotif_Subs::profile();
+    return WeNotif_Subs::profile($memID);
 }
 
 /**
  * Base interface that every susbcriber should follow
  */
-interface NotifSusbcriber
+interface NotifSubscriber
 {
+    /**
+     * Returns a URL for the object
+     *
+     * @access public
+     * @param int $object
+     * @return string
+     */
+    public function getURL($object);
+
     /**
      * Returns this subscription's name
      *
@@ -227,16 +261,16 @@ class NotifSubscription
     public static function get(NotifSubscriber $subs, $object, $member = null)
     {
         if ($member == null)
-            $member = we::$user['id'];
+            $member = we::$id;
 
         $query = wesql::query('
             SELECT id_member, id_object
-            FROM {db_prefix}wenotif_subs
+            FROM {db_prefix}notif_subs
             WHERE id_member = {int:member}
                 AND id_object = {int:object}
                 AND type = {string:type}
             LIMIT 1', array(
-                'member' => $user_info['id'],
+                'member' => $member,
                 'object' => $object,
                 'type' => $subs->getName(),
             )
@@ -265,9 +299,9 @@ class NotifSubscription
     public static function store(NotifSubscriber $subs, $object, $member = null)
     {
         if ($member == null)
-            $member = we::$user['id'];
+            $member = we::$id;
 
-        wesql::insert('', '{db_prefix}wenotif_subs',
+        wesql::insert('', '{db_prefix}notif_subs',
             array('id_member' => 'int', 'id_object' => 'int', 'type' => 'string', 'starttime' => 'int'),
             array($member, $object, $subs->getName(), time()),
             array('id_member', 'id_object', 'type')
@@ -294,7 +328,7 @@ class NotifSubscription
         // Fetch all the members having this subscription
         $query = wesql::query('
             SELECT id_member
-            FROM {db_prefix}WeNotif_subs
+            FROM {db_prefix}notif_subs
             WHERE type = {string:type}
                 AND id_object = {int:object}',
             array(
@@ -344,7 +378,7 @@ class NotifSubscription
     public function delete()
     {
         wesql::query('', '
-            DELETE FROM {db_prefix}WeNotif_subs
+            DELETE FROM {db_prefix}notif_subs
             WHERE id_memebr = {int:member}
                 AND id_object = {int:object}
                 AND type = {string:type}',
