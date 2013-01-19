@@ -6,11 +6,11 @@
   <version>1.0</version>
 
   <actions>
-    <action action="subscribe" function="WeNotif_Subs::action" filename="$plugindir/plugin" />
+    <action action="subscribe" function="WeNotif_Subs::action" filename="plugin" />
   </actions>
 
   <hooks>
-    <function point="load_theme" function="WeNotif_Subs::hook_load_theme" filename="$plugindir/plugin" />
+    <function point="load_theme" function="WeNotif_Subs::hook_load_theme" filename="$plugindir/plugin" priority="60" />
     <function point="profile_areas" function="WeNotif_Subs::hook_profile_areas" filename="$plugindir/plugin" />
 
     <provides>
