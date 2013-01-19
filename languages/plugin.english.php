@@ -12,3 +12,4 @@
  */
 
 $txt['notif_subs'] = 'Notification Subscriptions';
+$txt['notif_subs_desc'] = 'You can manage your existing subscriptions to various notifiers here, note that if you have subscriptions from disabled notifiers then they will not be displayed';
