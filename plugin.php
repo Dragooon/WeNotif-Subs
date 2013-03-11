@@ -122,7 +122,7 @@ class WeNotif_Subs
             $subscriptions[$type] = array(
                 'type' => $type,
                 'subscriber' => $subscription,
-                'profile' => $subscription->getProfile(),
+                'profile' => $subscription->getProfile($memID),
                 'objects' => array(),
             );
             $starttimes[$type] = array();
@@ -216,9 +216,10 @@ interface NotifSubscriber
      * )
      *
      * @access public
+     * @param int $id_member
      * @return array
      */
-    public function getProfile();
+    public function getProfile($id_member);
 
     /**
      * Returns the ID, name and an URL for the passed objects for this
