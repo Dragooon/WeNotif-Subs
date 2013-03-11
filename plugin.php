@@ -344,9 +344,13 @@ class NotifSubscription
         $members = array();
 
         while ($row = wesql::fetch_row($query))
-            $members[] = $row[0];
+            if ($row[0] != we::$id)
+                $members[] = $row[0];
 
         wesql::free_result($query);
+
+        if (empty($members))
+            return array();
 
         $notifications = Notification::issue($members, $notifier, $object, $data);
 
